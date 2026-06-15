@@ -7,7 +7,18 @@ const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
+
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+const SERVICES = [
+  "Men's Haircut",
+  'Fade',
+  'Skin Fade',
+  'Beard Trim',
+  'Line Up',
+  'Kids Cut',
+  'Other',
+]
 
 const MIN_YEAR = 2026
 const MAX_YEAR = 2027
@@ -22,10 +33,16 @@ function getFirstDayOfWeek(year: number, month: number) {
 
 export function BookingCalendar() {
   const today = new Date()
+
   const [year, setYear] = useState(today.getFullYear() < MIN_YEAR ? MIN_YEAR : today.getFullYear())
   const [month, setMonth] = useState(today.getFullYear() < MIN_YEAR ? 0 : today.getMonth())
   const [selected, setSelected] = useState<{ year: number; month: number; day: number } | null>(null)
   const [sundayWarning, setSundayWarning] = useState(false)
+
+  const [clientName, setClientName] = useState('')
+  const [clientPhone, setClientPhone] = useState('')
+  const [service, setService] = useState('')
+  const [message, setMessage] = useState('')
 
   const daysInMonth = getDaysInMonth(year, month)
   const firstDay = getFirstDayOfWeek(year, month)
@@ -34,10 +51,10 @@ export function BookingCalendar() {
     if (month === 0) {
       if (year > MIN_YEAR) {
         setMonth(11)
-        setYear(y => y - 1)
+        setYear((y) => y - 1)
       }
     } else {
-      setMonth(m => m - 1)
+      setMonth((m) => m - 1)
     }
   }
 
@@ -45,10 +62,10 @@ export function BookingCalendar() {
     if (month === 11) {
       if (year < MAX_YEAR) {
         setMonth(0)
-        setYear(y => y + 1)
+        setYear((y) => y + 1)
       }
     } else {
-      setMonth(m => m + 1)
+      setMonth((m) => m + 1)
     }
   }
 
@@ -79,23 +96,28 @@ export function BookingCalendar() {
 
   const bookingEmail = 'Josealexandercordobaibarguen@gmail.com'
 
-  const emailLink = selectedDateStr
-    ? `mailto:${bookingEmail}?subject=${encodeURIComponent(
-        `Booking request for ${selectedDateStr} | El Bendito Latin Barber`
-      )}&body=${encodeURIComponent(
-        `Hi El Bendito Latin Barber,
+  const emailLink =
+    selectedDateStr && clientName.trim() && clientPhone.trim() && service
+      ? `mailto:${bookingEmail}?subject=${encodeURIComponent(
+          `Booking request for ${selectedDateStr} | El Bendito Latin Barber`
+        )}&body=${encodeURIComponent(
+          `Hi El Bendito Latin Barber,
 
-I would like to book an appointment for ${selectedDateStr}.
+I would like to book an appointment.
 
-Please let me know the available times for that day.
+Selected date: ${selectedDateStr}
+Name: ${clientName}
+Phone number: ${clientPhone}
+Preferred service: ${service}
+Additional message: ${message || 'No additional message'}
 
-My name is:
-My phone number is:
-Preferred service:
+Please confirm the available time for that day.
 
 Thank you.`
-      )}`
-    : '#'
+        )}`
+      : '#'
+
+  const canSendBooking = Boolean(selectedDateStr && clientName.trim() && clientPhone.trim() && service)
 
   return (
     <section id="booking" className="py-20 lg:py-28 bg-background">
@@ -113,7 +135,7 @@ Thank you.`
           <div className="w-16 h-1 bg-primary rounded-full mx-auto mb-6" />
 
           <p className="text-muted-foreground text-lg max-w-xl mx-auto text-balance">
-            Select a date and send your booking request by email.
+            Select a date, fill in your details and send your booking request by email.
           </p>
         </div>
 
@@ -178,11 +200,12 @@ Thank you.`
                   aria-pressed={isSelected}
                   className={`
                     relative aspect-square rounded-lg text-sm font-bold transition-all duration-150
-                    ${isSunday
-                      ? 'text-muted-foreground/30 cursor-not-allowed line-through'
-                      : isSelected
-                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-105'
-                        : 'text-foreground hover:bg-secondary hover:text-primary'
+                    ${
+                      isSunday
+                        ? 'text-muted-foreground/30 cursor-not-allowed line-through'
+                        : isSelected
+                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-105'
+                          : 'text-foreground hover:bg-secondary hover:text-primary'
                     }
                   `}
                 >
@@ -200,8 +223,8 @@ Thank you.`
             )}
 
             {selected ? (
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="flex-1 bg-secondary border border-border rounded-lg px-4 py-3 text-sm">
+              <div className="space-y-5">
+                <div className="bg-secondary border border-border rounded-lg px-4 py-3 text-sm">
                   <p className="text-muted-foreground text-xs uppercase tracking-wider font-bold mb-1">
                     Selected date
                   </p>
@@ -213,13 +236,85 @@ Thank you.`
                   </p>
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">
+                      Your name
+                    </label>
+                    <input
+                      type="text"
+                      value={clientName}
+                      onChange={(e) => setClientName(e.target.value)}
+                      placeholder="Enter your name"
+                      className="w-full bg-background border border-border rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">
+                      Phone number
+                    </label>
+                    <input
+                      type="tel"
+                      value={clientPhone}
+                      onChange={(e) => setClientPhone(e.target.value)}
+                      placeholder="Enter your phone"
+                      className="w-full bg-background border border-border rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">
+                      Service
+                    </label>
+                    <select
+                      value={service}
+                      onChange={(e) => setService(e.target.value)}
+                      className="w-full bg-background border border-border rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:border-primary"
+                    >
+                      <option value="">Select a service</option>
+                      {SERVICES.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs uppercase tracking-wider font-bold text-muted-foreground mb-2">
+                      Message optional
+                    </label>
+                    <textarea
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="Example: I prefer afternoon if available."
+                      rows={3}
+                      className="w-full bg-background border border-border rounded-lg px-4 py-3 text-sm text-foreground outline-none focus:border-primary resize-none"
+                    />
+                  </div>
+                </div>
+
                 <a
                   href={emailLink}
-                  className="flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded font-bold text-sm uppercase tracking-wider hover:bg-primary/90 active:scale-95 transition-all shadow-lg shadow-primary/20 w-full sm:w-auto whitespace-nowrap"
+                  onClick={(e) => {
+                    if (!canSendBooking) e.preventDefault()
+                  }}
+                  className={`flex items-center justify-center gap-2 px-6 py-3.5 rounded font-bold text-sm uppercase tracking-wider transition-all shadow-lg w-full sm:w-auto whitespace-nowrap ${
+                    canSendBooking
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 shadow-primary/20'
+                      : 'bg-muted text-muted-foreground cursor-not-allowed opacity-60'
+                  }`}
                 >
                   <Mail size={18} />
                   Send Booking
                 </a>
+
+                {!canSendBooking && (
+                  <p className="text-muted-foreground text-xs text-center sm:text-left">
+                    Please complete your name, phone number and service before sending.
+                  </p>
+                )}
               </div>
             ) : (
               !sundayWarning && (
